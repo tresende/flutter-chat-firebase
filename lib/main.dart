@@ -50,6 +50,14 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         body: Column(
           children: <Widget>[
+            Expanded(
+              child: ListView(
+                children: <Widget>[ChatMessage(), ChatMessage(), ChatMessage()],
+              ),
+            ),
+            Divider(
+              height: 1,
+            ),
             Container(
               child: TextComposer(),
               decoration: BoxDecoration(color: Theme.of(context).cardColor),
@@ -110,6 +118,38 @@ class _TextComposerState extends State<TextComposer> {
         ),
       ),
       data: IconThemeData(color: Theme.of(context).accentColor),
+    );
+  }
+}
+
+class ChatMessage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            child: CircleAvatar(
+                backgroundImage: NetworkImage(
+                    "https://acuvate.com/wp-content/uploads/2017/04/IT-Helpdesk-Avatar-300x300.png")),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text("Thiago", style: Theme.of(context).textTheme.subhead),
+                Container(
+                  margin: const EdgeInsets.only(top: 5),
+                  child: Text("Teste"),
+                )
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 }
