@@ -24,18 +24,21 @@ final auth = FirebaseAuth.instance;
 
 Future<Null> _ensureLoggedIn() async {
   GoogleSignInAccount user = googleSignIn.currentUser;
-  if (user == null) {
-    user = await googleSignIn.signInSilently();
-  }
-  if (user == null) {
-    user = await googleSignIn.signIn();
-  }
-  if (await auth.currentUser() == null) {
-    GoogleSignInAuthentication credentials =
-        await googleSignIn.currentUser.authentication;
-    await auth.signInWithGoogle(
-        idToken: credentials.idToken, accessToken: credentials.accessToken);
-  }
+  if (user == null) user = await googleSignIn.signIn();
+}
+
+_handleSubmitted(String text) async {
+  await _ensureLoggedIn();
+  _sendMessage(text: text);
+}
+
+void _sendMessage({String text, String imgUrl}) {
+  Firestore.instance.collection("messages").add({
+    "text": text,
+    "imgUrl": imgUrl,
+    "senderName": googleSignIn.currentUser.displayName,
+    "senderPhotoUrl": googleSignIn.currentUser.photoUrl
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -98,6 +101,14 @@ class TextComposer extends StatefulWidget {
 class _TextComposerState extends State<TextComposer> {
   bool _isComposing = false;
 
+  void _reset() {
+    _textController.clear();
+    setState(() {
+      this._isComposing = false;
+    });
+  }
+
+  final TextEditingController _textController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return IconTheme(
@@ -117,6 +128,11 @@ class _TextComposerState extends State<TextComposer> {
             ),
             Expanded(
               child: TextField(
+                controller: _textController,
+                onSubmitted: (text) {
+                  _handleSubmitted(_textController.text);
+                  _reset();
+                },
                 onChanged: (text) {
                   setState(() {
                     this._isComposing = text.length > 0;
@@ -131,10 +147,20 @@ class _TextComposerState extends State<TextComposer> {
                 child: Theme.of(context).platform == TargetPlatform.iOS
                     ? CupertinoButton(
                         child: Text("Enviar"),
-                        onPressed: _isComposing ? () {} : null)
+                        onPressed: _isComposing
+                            ? () {
+                                _handleSubmitted(_textController.text);
+                                _reset();
+                              }
+                            : null)
                     : IconButton(
                         icon: Icon(Icons.send),
-                        onPressed: _isComposing ? () {} : null))
+                        onPressed: _isComposing
+                            ? () {
+                                _handleSubmitted(_textController.text);
+                                _reset();
+                              }
+                            : null))
           ],
         ),
       ),
