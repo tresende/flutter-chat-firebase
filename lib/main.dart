@@ -75,9 +75,27 @@ class _ChatScreenState extends State<ChatScreen> {
         body: Column(
           children: <Widget>[
             Expanded(
-              child: ListView(
-                children: <Widget>[ChatMessage(), ChatMessage(), ChatMessage()],
-              ),
+              child: StreamBuilder(
+                  stream: Firestore.instance.collection("messages").snapshots(),
+                  builder: (context, snapshot) {
+                    switch (snapshot.connectionState) {
+                      case ConnectionState.none:
+                      case ConnectionState.waiting:
+                        return Center(child: CircularProgressIndicator());
+                        break;
+                      default:
+                        return ListView.builder(
+                          reverse: true,
+                          itemCount: snapshot.data.documents.length,
+                          itemBuilder: (context, index) {
+                            var reversedList =
+                                snapshot.data.documents.reversed.toList();
+                            return ChatMessage(reversedList[index].data);
+                          },
+                          // itemBuilder: (),
+                        );
+                    }
+                  }),
             ),
             Divider(
               height: 1,
@@ -170,6 +188,8 @@ class _TextComposerState extends State<TextComposer> {
 }
 
 class ChatMessage extends StatelessWidget {
+  final Map<String, dynamic> data;
+  ChatMessage(this.data);
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -180,18 +200,19 @@ class ChatMessage extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(right: 16),
             child: CircleAvatar(
-                backgroundImage: NetworkImage(
-                    "https://acuvate.com/wp-content/uploads/2017/04/IT-Helpdesk-Avatar-300x300.png")),
+                backgroundImage: NetworkImage(data["senderPhotoUrl"])),
           ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text("Thiago", style: Theme.of(context).textTheme.subhead),
+                Text(data["senderName"],
+                    style: Theme.of(context).textTheme.subhead),
                 Container(
-                  margin: const EdgeInsets.only(top: 5),
-                  child: Text("Teste"),
-                )
+                    margin: const EdgeInsets.only(top: 5),
+                    child: data["dataImageUrl"] != null
+                        ? Image.network(data["imgUrl"], width: 250)
+                        : Text(data["text"]))
               ],
             ),
           )
