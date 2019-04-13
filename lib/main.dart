@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:image_picker/image_picker.dart';
 
 void main() async {
   runApp(MyApp());
@@ -142,7 +146,22 @@ class _TextComposerState extends State<TextComposer> {
             Container(
               child: IconButton(
                 icon: Icon(Icons.photo_camera),
-                onPressed: () {},
+                onPressed: () async {
+                  await _ensureLoggedIn();
+                  File imageFile =
+                      await ImagePicker.pickImage(source: ImageSource.camera);
+                  if (imageFile == null) return;
+                  print(imageFile);
+                  var uniq = googleSignIn.currentUser.id.toString() +
+                      DateTime.now().millisecondsSinceEpoch.toString();
+                  StorageUploadTask task = FirebaseStorage.instance
+                      .ref()
+                      .child(uniq)
+                      .putFile(imageFile);
+                  StorageTaskSnapshot taskSnapshot = await task.onComplete;
+                  String url = await taskSnapshot.ref.getDownloadURL();
+                  _sendMessage(imgUrl: url);
+                },
               ),
             ),
             Expanded(
@@ -201,7 +220,8 @@ class ChatMessage extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(right: 16),
             child: CircleAvatar(
-                backgroundImage: NetworkImage(data["senderPhotoUrl"] ?? "https://acuvate.com/wp-content/uploads/2017/04/IT-Helpdesk-Avatar-300x300.png")),
+                backgroundImage: NetworkImage(data["senderPhotoUrl"] ??
+                    "https://acuvate.com/wp-content/uploads/2017/04/IT-Helpdesk-Avatar-300x300.png")),
           ),
           Expanded(
             child: Column(
