@@ -67,6 +67,7 @@ class _ChatScreenState extends State<ChatScreen> {
       bottom: false,
       top: false,
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
           centerTitle: true,
           title: Text("Chat App"),
@@ -200,7 +201,7 @@ class ChatMessage extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(right: 16),
             child: CircleAvatar(
-                backgroundImage: NetworkImage(data["senderPhotoUrl"])),
+                backgroundImage: NetworkImage(data["senderPhotoUrl"] ?? "https://acuvate.com/wp-content/uploads/2017/04/IT-Helpdesk-Avatar-300x300.png")),
           ),
           Expanded(
             child: Column(
