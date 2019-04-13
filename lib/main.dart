@@ -28,7 +28,14 @@ final auth = FirebaseAuth.instance;
 
 Future<Null> _ensureLoggedIn() async {
   GoogleSignInAccount user = googleSignIn.currentUser;
+  if (user == null) user = await googleSignIn.signInSilently();
   if (user == null) user = await googleSignIn.signIn();
+  if (await auth.currentUser() == null) {
+    GoogleSignInAuthentication credentials =
+        await googleSignIn.currentUser.authentication;
+    await auth.signInWithGoogle(
+        idToken: credentials.idToken, accessToken: credentials.accessToken);
+  }
 }
 
 _handleSubmitted(String text) async {
@@ -148,6 +155,7 @@ class _TextComposerState extends State<TextComposer> {
                 icon: Icon(Icons.photo_camera),
                 onPressed: () async {
                   await _ensureLoggedIn();
+                  print(googleSignIn.currentUser);
                   File imageFile =
                       await ImagePicker.pickImage(source: ImageSource.camera);
                   if (imageFile == null) return;
@@ -231,7 +239,7 @@ class ChatMessage extends StatelessWidget {
                     style: Theme.of(context).textTheme.subhead),
                 Container(
                     margin: const EdgeInsets.only(top: 5),
-                    child: data["dataImageUrl"] != null
+                    child: data["imgUrl"] != null
                         ? Image.network(data["imgUrl"], width: 250)
                         : Text(data["text"]))
               ],
